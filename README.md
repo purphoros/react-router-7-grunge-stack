@@ -1,17 +1,11 @@
-> [!NOTE]  
-> This repo has been archived. Please refer instead to:
-> - The official [React Router templates](https://github.com/remix-run/react-router-templates/) for simple templates to get started with
-> - [The Epic Stack](https://github.com/epicweb-dev/epic-stack) for a more comprehensive, batteries-included option
-> - [Remix Discord](https://rmx.as/discord) to ask and share community templates
+# React Router 7 Grunge Stack
 
-# Remix Grunge Stack
+![The React Router Grunge Stack](https://repository-images.githubusercontent.com/463325363/edae4f5b-1a13-47ea-b90c-c05badc2a700)
 
-![The Remix Grunge Stack](https://repository-images.githubusercontent.com/463325363/edae4f5b-1a13-47ea-b90c-c05badc2a700)
-
-Learn more about [Remix Stacks](https://remix.run/stacks).
+Learn more about [React Router](https://reactrouter.com).
 
 ```
-npx create-remix@latest --template remix-run/grunge-stack
+npx create-react-router@latest --template purphoros/react-router-7-grunge-stack
 ```
 
 ## What's in the stack
@@ -19,7 +13,7 @@ npx create-remix@latest --template remix-run/grunge-stack
 - [AWS deployment](https://aws.com) with [Architect](https://arc.codes/)
 - Production-ready [DynamoDB Database](https://aws.amazon.com/dynamodb/)
 - [GitHub Actions](https://github.com/features/actions) for deploy on merge to production and staging environments
-- Email/Password Authentication with [cookie-based sessions](https://remix.run/utils/sessions#createcookiesessionstorage)
+- Email/Password Authentication with [cookie-based sessions](https://reactrouter.com/utils/sessions#createcookiesessionstorage)
 - DynamoDB access via [`arc.tables`](https://arc.codes/docs/en/reference/runtime-helpers/node.js#arc.tables)
 - Styling with [Tailwind](https://tailwindcss.com/)
 - End-to-end testing with [Cypress](https://cypress.io)
@@ -28,24 +22,20 @@ npx create-remix@latest --template remix-run/grunge-stack
 - Code formatting with [Prettier](https://prettier.io)
 - Linting with [ESLint](https://eslint.org)
 - Static Types with [TypeScript](https://typescriptlang.org)
+- Security headers, nonce-based CSP, and CSRF protection
 
-Not a fan of bits of the stack? Fork it, change it, and use `npx create-remix --template your/repo`! Make it your own.
-
-## Quickstart
-
-Click this button to create a [Gitpod](https://gitpod.io) workspace with the project set up
-
-[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/from-referrer/)
+Not a fan of bits of the stack? Fork it, change it, and use `npx create-react-router@latest --template your/repo`! Make it your own.
 
 ## Development
 
-- First run this stack's `remix.init` script and commit the changes it makes to your project.
+- Initialize a new git repository and commit your project:
 
   ```sh
-  npx remix init
-  git init # if you haven't already
+  git init
   git add .
   git commit -m "Initialize project"
+  git remote add origin <your-repo-url>
+  git push -u origin main
   ```
 
 - Validate the app has been set up properly (optional):
@@ -64,7 +54,7 @@ This starts your app in development mode, rebuilding assets on file changes.
 
 ### Relevant code:
 
-This is a pretty simple note-taking app, but it's a good example of how you can build a full stack app with Architect and Remix. The main functionality is creating users, logging in and out, and creating and deleting notes.
+This is a pretty simple note-taking app, but it's a good example of how you can build a full stack app with Architect and React Router. The main functionality is creating users, logging in and out, and creating and deleting notes.
 
 - creating users, and logging in and out [./app/models/user.server.ts](./app/models/user.server.ts)
 - user sessions, and verifying them [./app/session.server.ts](./app/session.server.ts)
@@ -72,9 +62,75 @@ This is a pretty simple note-taking app, but it's a good example of how you can 
 
 The database that comes with `arc sandbox` is an in memory database, so if you restart the server, you'll lose your data. The Staging and Production environments won't behave this way, instead they'll persist the data in DynamoDB between deployments and Lambda executions.
 
+## Security
+
+This stack includes built-in security headers, Content Security Policy (CSP), and CSRF protection. All configuration lives in [`app/helpers/security.server.ts`](./app/helpers/security.server.ts).
+
+### Content Security Policy
+
+The CSP is built from individual directives in the `buildCSP()` function. To allow additional sources, add the domains to the relevant directive:
+
+```ts
+function buildCSP(scriptInline: string): string {
+  const directives = [
+    `default-src 'self'`,
+    `script-src 'self' ${scriptInline}`,
+    `style-src 'self' 'unsafe-inline'`,
+    `img-src 'self' data: blob: user-images.githubusercontent.com reactrouter.com`,
+    `font-src 'self' data:`,
+    `connect-src 'self'`,
+    `object-src 'none'`,
+    `base-uri 'self'`,
+    `form-action 'self'`,
+    `frame-ancestors 'self'`,
+  ];
+  return directives.join("; ");
+}
+```
+
+Common examples:
+
+- **Loading images from a CDN**: Add the domain to `img-src`
+  ```
+  `img-src 'self' data: blob: cdn.example.com`
+  ```
+- **Loading fonts from Google Fonts**: Add domains to `font-src` and `style-src`
+  ```
+  `font-src 'self' data: fonts.gstatic.com`
+  `style-src 'self' 'unsafe-inline' fonts.googleapis.com`
+  ```
+- **Loading scripts from a third-party** (e.g. analytics): Add the domain to `script-src` and `connect-src`
+  ```
+  `script-src 'self' ${scriptInline} analytics.example.com`
+  `connect-src 'self' analytics.example.com`
+  ```
+- **Embedding iframes** (e.g. YouTube): Add a `frame-src` directive
+  ```
+  `frame-src 'self' www.youtube.com`
+  ```
+
+In development, `script-src` uses `'unsafe-inline'` instead of nonces for compatibility with Vite's HMR. In production, a unique nonce is generated per request and passed to `<ServerRouter>` and `renderToPipeableStream`.
+
+### HTTP Security Headers
+
+The following headers are set on every response:
+
+| Header | Value |
+| --- | --- |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `SAMEORIGIN` |
+| `X-XSS-Protection` | `1; mode=block` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
+
+### CSRF Protection
+
+All mutating form actions are protected with a Synchronizer Token. The token is generated in the root loader, stored in a separate `__local` cookie session, and validated in each action via `validateCsrfToken(request)`. Forms include the token automatically using the `<CsrfInput />` component.
+
 ## Deployment
 
-This Remix Stack comes with two GitHub Actions that handle automatically deploying your app to production and staging environments. By default, Arc will deploy to the `us-west-2` region, if you wish to deploy to a different region, you'll need to change your [`app.arc`](https://arc.codes/docs/en/reference/project-manifest/aws)
+This stack comes with two GitHub Actions that handle automatically deploying your app to production and staging environments. By default, Arc will deploy to the `us-west-2` region, if you wish to deploy to a different region, you'll need to change your [`app.arc`](https://arc.codes/docs/en/reference/project-manifest/aws)
 
 Prior to your first deployment, you'll need to do a few things:
 
@@ -87,6 +143,50 @@ Prior to your first deployment, you'll need to do a few things:
 - Install the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html#getting-started-install-instructions).
 
 - Create an [AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html#getting-started-quickstart-new).
+
+### AWS Configuration
+
+Architect uses the `@aws` pragma in `app.arc` and your local `~/.aws/credentials` file to deploy to AWS.
+
+#### Setting the profile and region in `app.arc`
+
+Uncomment and set the `profile` and `region` fields under `@aws` in `app.arc` to match your setup:
+
+```arc
+@aws
+runtime nodejs22.x
+profile default
+region us-west-1
+```
+
+- **profile** — the name of the credentials profile in `~/.aws/credentials` to use for deployment. Defaults to `default`.
+- **region** — the AWS region to deploy to (e.g. `us-west-1`, `us-east-1`, `eu-west-1`).
+
+#### Configuring `~/.aws/credentials`
+
+If you haven't already, create or update `~/.aws/credentials` with your access keys:
+
+```ini
+[default]
+aws_access_key_id = YOUR_ACCESS_KEY_ID
+aws_secret_access_key = YOUR_SECRET_ACCESS_KEY
+```
+
+To use a named profile other than `default`, add a new section and update `app.arc` to match:
+
+```ini
+[my-profile]
+aws_access_key_id = YOUR_ACCESS_KEY_ID
+aws_secret_access_key = YOUR_SECRET_ACCESS_KEY
+```
+
+```arc
+@aws
+profile my-profile
+region us-west-2
+```
+
+You can create access keys from the [AWS IAM console](https://console.aws.amazon.com/iam/home#/security_credentials). For more details, see the [AWS CLI configuration guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html#getting-started-quickstart-new).
 
 - Along with your AWS credentials, you'll also need to give your CloudFormation a `SESSION_SECRET` variable of its own for both staging and production environments, as well as an `ARC_APP_SECRET` for Arc itself.
 
@@ -103,7 +203,7 @@ Prior to your first deployment, you'll need to do a few things:
 
 You can find the CloudFormation template that Architect generated for you in the sam.yaml file.
 
-To find it on AWS, you can search for [CloudFormation](https://console.aws.amazon.com/cloudformation/home) (make sure you're looking at the correct region!) and find the name of your stack (the name is a PascalCased version of what you have in `app.arc`, so by default it's RemixGrungeStackStaging and RemixGrungeStackProduction) that matches what's in `app.arc`, you can find all of your app's resources under the "Resources" tab.
+To find it on AWS, you can search for [CloudFormation](https://console.aws.amazon.com/cloudformation/home) (make sure you're looking at the correct region!) and find the name of your stack (the name is a PascalCased version of what you have in `app.arc`, so by default it's ReactRouterGrungeStackStaging and ReactRouterGrungeStackProduction) that matches what's in `app.arc`, you can find all of your app's resources under the "Resources" tab.
 
 ## GitHub Actions
 
@@ -136,7 +236,7 @@ This project uses TypeScript. It's recommended to get TypeScript set up for your
 
 ### Linting
 
-This project uses ESLint for linting. That is configured in `.eslintrc.js`.
+This project uses ESLint for linting. That is configured in `.eslintrc.cjs`.
 
 ### Formatting
 

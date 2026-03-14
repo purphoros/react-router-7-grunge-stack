@@ -7,16 +7,17 @@ pnpm-lock.yml
 yarn.lock
 
 node_modules
+.DS_Store
 
+/build
 /public/build
-/server/index.mjs
-/server/index.mjs.map
-/server/metafile.*
-/server/version.txt
+.react-router
 preferences.arc
 sam.json
 sam.yaml
+save.sh
 .env
+vite.config.ts.timestamp-*
 
 /cypress/screenshots
 /cypress/videos

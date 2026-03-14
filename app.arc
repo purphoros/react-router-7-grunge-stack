@@ -2,7 +2,10 @@
 grunge-stack-template
 
 @aws
-runtime nodejs18.x
+runtime nodejs22.x
+profile purphoros-cli
+region us-west-1
+
 # concurrency 1
 # memory 1152
 # profile default
@@ -12,13 +15,10 @@ runtime nodejs18.x
 @http
 /*
   method any
-  src server
-
-@plugins
-plugin-remix
-  src plugin-remix.js
+  src build/server
 
 @static
+folder build/client
 
 @tables
 user

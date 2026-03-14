@@ -1,0 +1,14 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@architect/functions": "^8.1.6",
+    "@aws-lite/client": "^0.22.4",
+    "bcryptjs": "2.4.3",
+    "@react-router/architect": "^7.13.1",
+    "@react-router/node": "^7.13.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router": "^7.13.1",
+    "isbot": "^5.1.17"
+  }
+}

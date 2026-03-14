@@ -88,13 +88,6 @@ module.exports = {
       },
     },
 
-    // Markdown
-    {
-      files: ["**/*.md"],
-      plugins: ["markdown"],
-      extends: ["plugin:markdown/recommended-legacy", "prettier"],
-    },
-
     // Jest/Vitest
     {
       files: ["**/*.test.{js,jsx,ts,tsx}"],
@@ -128,9 +121,8 @@ module.exports = {
     // Node
     {
       files: [
-        ".eslintrc.js",
-        "plugin-remix.js",
-        "remix.config.js",
+        ".eslintrc.cjs",
+        "cypress.config.js",
         "mocks/**/*.js",
       ],
       env: {

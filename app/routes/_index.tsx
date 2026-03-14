@@ -1,9 +1,9 @@
-import type { MetaFunction } from "@remix-run/node";
-import { Link } from "@remix-run/react";
+import type { MetaFunction } from "react-router";
+import { Link } from "react-router";
 
 import { useOptionalUser } from "~/utils";
 
-export const meta: MetaFunction = () => [{ title: "Remix Notes" }];
+export const meta: MetaFunction = () => [{ title: "React Router Notes" }];
 
 export default function Index() {
   const user = useOptionalUser();
@@ -55,10 +55,10 @@ export default function Index() {
                   </div>
                 )}
               </div>
-              <a href="https://remix.run">
+              <a href="https://reactrouter.com">
                 <img
-                  src="https://user-images.githubusercontent.com/1500684/158298926-e45dafff-3544-4b69-96d6-d3bcc33fc76a.svg"
-                  alt="Remix"
+                  src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Lockup/Light.svg"
+                  alt="React Router"
                   className="mx-auto mt-16 w-full max-w-[12rem] md:max-w-[16rem]"
                 />
               </a>

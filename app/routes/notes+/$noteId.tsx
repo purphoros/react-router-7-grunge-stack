@@ -1,13 +1,15 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import {
   Form,
   isRouteErrorResponse,
+  redirect,
   useLoaderData,
   useRouteError,
-} from "@remix-run/react";
+} from "react-router";
 import invariant from "tiny-invariant";
 
+import { CsrfInput } from "~/components/CsrfInput";
+import { validateCsrfToken } from "~/helpers/security.server";
 import { deleteNote, getNote } from "~/models/note.server";
 import { requireUserId } from "~/session.server";
 
@@ -19,10 +21,11 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
   if (!note) {
     throw new Response("Not Found", { status: 404 });
   }
-  return json({ note });
+  return { note };
 };
 
 export const action = async ({ params, request }: ActionFunctionArgs) => {
+  await validateCsrfToken(request);
   const userId = await requireUserId(request);
   invariant(params.noteId, "noteId not found");
 
@@ -40,6 +43,7 @@ export default function NoteDetailsPage() {
       <p className="py-6">{data.note.body}</p>
       <hr className="my-4" />
       <Form method="post">
+        <CsrfInput />
         <button
           type="submit"
           className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"

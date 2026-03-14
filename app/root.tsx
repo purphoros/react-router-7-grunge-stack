@@ -1,25 +1,30 @@
-import { cssBundleHref } from "@remix-run/css-bundle";
-import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import type { LoaderFunctionArgs } from "react-router";
 import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-} from "@remix-run/react";
+} from "react-router";
 
+import { generateCsrfToken } from "~/helpers/security.server";
 import { getUser } from "~/session.server";
-import stylesheet from "~/tailwind.css";
+import stylesheet from "~/tailwind.css?url";
 
-export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: stylesheet },
-  ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
-];
+export const links = () => [{ rel: "stylesheet", href: stylesheet }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  return json({ user: await getUser(request) });
+  const [user, { token: csrfToken, cookie: csrfCookie }] = await Promise.all([
+    getUser(request),
+    generateCsrfToken(request),
+  ]);
+
+  return new Response(JSON.stringify({ user, csrfToken }), {
+    headers: {
+      "Content-Type": "application/json",
+      "Set-Cookie": csrfCookie,
+    },
+  });
 };
 
 export default function App() {
@@ -36,7 +41,6 @@ export default function App() {
         <Outlet />
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );

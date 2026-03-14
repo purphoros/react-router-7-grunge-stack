@@ -1,12 +1,20 @@
+import { useEffect, useRef } from "react";
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
   MetaFunction,
-} from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
-import { Form, Link, useActionData, useSearchParams } from "@remix-run/react";
-import { useEffect, useRef } from "react";
+} from "react-router";
+import {
+  data,
+  Form,
+  Link,
+  redirect,
+  useActionData,
+  useSearchParams,
+} from "react-router";
 
+import { CsrfInput } from "~/components/CsrfInput";
+import { validateCsrfToken } from "~/helpers/security.server";
 import { verifyLogin } from "~/models/user.server";
 import { createUserSession, getUserId } from "~/session.server";
 import { safeRedirect, validateEmail } from "~/utils";
@@ -14,10 +22,11 @@ import { safeRedirect, validateEmail } from "~/utils";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await getUserId(request);
   if (userId) return redirect("/");
-  return json({});
+  return {};
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  await validateCsrfToken(request);
   const formData = await request.formData();
   const email = formData.get("email");
   const password = formData.get("password");
@@ -25,21 +34,21 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const remember = formData.get("remember");
 
   if (!validateEmail(email)) {
-    return json(
+    return data(
       { errors: { email: "Email is invalid", password: null } },
       { status: 400 },
     );
   }
 
   if (typeof password !== "string" || password.length === 0) {
-    return json(
+    return data(
       { errors: { email: null, password: "Password is required" } },
       { status: 400 },
     );
   }
 
   if (password.length < 8) {
-    return json(
+    return data(
       { errors: { email: null, password: "Password is too short" } },
       { status: 400 },
     );
@@ -48,7 +57,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const user = await verifyLogin(email, password);
 
   if (!user) {
-    return json(
+    return data(
       { errors: { email: "Invalid email or password", password: null } },
       { status: 400 },
     );
@@ -100,7 +109,7 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                aria-invalid={actionData?.errors?.email ? true : undefined}
+                aria-invalid={actionData?.errors?.email ? "true" : "false"}
                 aria-describedby="email-error"
                 className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
               />
@@ -126,7 +135,7 @@ export default function LoginPage() {
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                aria-invalid={actionData?.errors?.password ? true : undefined}
+                aria-invalid={actionData?.errors?.password ? "true" : "false"}
                 aria-describedby="password-error"
                 className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
               />
@@ -138,6 +147,7 @@ export default function LoginPage() {
             </div>
           </div>
 
+          <CsrfInput />
           <input type="hidden" name="redirectTo" value={redirectTo} />
           <button
             type="submit"

@@ -32,7 +32,7 @@ jobs:
         with:
           cache: npm
           cache-dependency-path: ./package.json
-          node-version: 18
+          node-version: 22
 
       - name: 📥 Install deps
         run: npm install
@@ -52,7 +52,7 @@ jobs:
         with:
           cache: npm
           cache-dependency-path: ./package.json
-          node-version: 18
+          node-version: 22
 
       - name: 📥 Install deps
         run: npm install
@@ -72,7 +72,7 @@ jobs:
         with:
           cache: npm
           cache-dependency-path: ./package.json
-          node-version: 18
+          node-version: 22
 
       - name: 📥 Install deps
         run: npm install
@@ -95,21 +95,16 @@ jobs:
         with:
           cache: npm
           cache-dependency-path: ./package.json
-          node-version: 18
+          node-version: 22
 
       - name: 📥 Install deps
         run: npm install
 
-      - name: 🏗 Build
-        run: npm run build
-
       - name: 🌳 Cypress run
         uses: cypress-io/github-action@v6
         with:
-          start: npm run dev
+          start: npm run test:e2e:run
           wait-on: "http://localhost:8811"
-        env:
-          PORT: "8811"
 
   deploy:
     needs: [lint, typecheck, vitest, cypress]
@@ -124,7 +119,7 @@ jobs:
         with:
           cache: npm
           cache-dependency-path: ./package.json
-          node-version: 18
+          node-version: 22
 
       - name: 👀 Env
         run: |

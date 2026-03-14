@@ -1,12 +1,14 @@
-import type { ActionFunctionArgs } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
 import { useEffect, useRef } from "react";
+import type { ActionFunctionArgs } from "react-router";
+import { data, Form, redirect, useActionData } from "react-router";
 
+import { CsrfInput } from "~/components/CsrfInput";
+import { validateCsrfToken } from "~/helpers/security.server";
 import { createNote } from "~/models/note.server";
 import { requireUserId } from "~/session.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  await validateCsrfToken(request);
   const userId = await requireUserId(request);
 
   const formData = await request.formData();
@@ -14,14 +16,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const body = formData.get("body");
 
   if (typeof title !== "string" || title.length === 0) {
-    return json(
+    return data(
       { errors: { body: null, title: "Title is required" } },
       { status: 400 },
     );
   }
 
   if (typeof body !== "string" || body.length === 0) {
-    return json(
+    return data(
       { errors: { body: "Body is required", title: null } },
       { status: 400 },
     );
@@ -55,6 +57,7 @@ export default function NewNotePage() {
         width: "100%",
       }}
     >
+      <CsrfInput />
       <div>
         <label className="flex w-full flex-col gap-1">
           <span>Title: </span>
@@ -62,7 +65,7 @@ export default function NewNotePage() {
             ref={titleRef}
             name="title"
             className="flex-1 rounded-md border-2 border-blue-500 px-3 text-lg leading-loose"
-            aria-invalid={actionData?.errors?.title ? true : undefined}
+            aria-invalid={actionData?.errors?.title ? "true" : "false"}
             aria-errormessage={
               actionData?.errors?.title ? "title-error" : undefined
             }
@@ -83,7 +86,7 @@ export default function NewNotePage() {
             name="body"
             rows={8}
             className="w-full flex-1 rounded-md border-2 border-blue-500 px-3 py-2 text-lg leading-6"
-            aria-invalid={actionData?.errors?.body ? true : undefined}
+            aria-invalid={actionData?.errors?.body ? "true" : "false"}
             aria-errormessage={
               actionData?.errors?.body ? "body-error" : undefined
             }

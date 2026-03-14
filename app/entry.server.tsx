@@ -1,16 +1,12 @@
-/**
- * By default, Remix will handle generating the HTTP Response for you.
- * You are free to delete this file if you'd like to, but if you ever want it revealed again, you can run `npx remix reveal` ✨
- * For more information, see https://remix.run/docs/en/main/file-conventions/entry.server
- */
-
 import { PassThrough } from "node:stream";
 
-import type { EntryContext } from "@remix-run/node";
-import { createReadableStreamFromReadable } from "@remix-run/node";
-import { RemixServer } from "@remix-run/react";
+import { createReadableStreamFromReadable } from "@react-router/node";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
+import type { EntryContext } from "react-router";
+import { ServerRouter } from "react-router";
+
+import { generateNonce, getSecurityHeaders } from "~/helpers/security.server";
 
 const ABORT_DELAY = 5_000;
 
@@ -20,18 +16,28 @@ export default function handleRequest(
   responseHeaders: Headers,
   remixContext: EntryContext,
 ) {
+  const nonce = generateNonce();
+
+  // Attach security headers to every response
+  const securityHeaders = getSecurityHeaders(nonce);
+  for (const [key, value] of Object.entries(securityHeaders)) {
+    responseHeaders.set(key, value);
+  }
+
   return isbot(request.headers.get("user-agent"))
     ? handleBotRequest(
         request,
         responseStatusCode,
         responseHeaders,
         remixContext,
+        nonce,
       )
     : handleBrowserRequest(
         request,
         responseStatusCode,
         responseHeaders,
         remixContext,
+        nonce,
       );
 }
 
@@ -40,15 +46,13 @@ function handleBotRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   remixContext: EntryContext,
+  nonce: string,
 ) {
   return new Promise((resolve, reject) => {
     const { abort, pipe } = renderToPipeableStream(
-      <RemixServer
-        context={remixContext}
-        url={request.url}
-        abortDelay={ABORT_DELAY}
-      />,
+      <ServerRouter context={remixContext} url={request.url} nonce={nonce} />,
       {
+        nonce,
         onAllReady() {
           const body = new PassThrough();
 
@@ -82,15 +86,13 @@ function handleBrowserRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   remixContext: EntryContext,
+  nonce: string,
 ) {
   return new Promise((resolve, reject) => {
     const { abort, pipe } = renderToPipeableStream(
-      <RemixServer
-        context={remixContext}
-        url={request.url}
-        abortDelay={ABORT_DELAY}
-      />,
+      <ServerRouter context={remixContext} url={request.url} nonce={nonce} />,
       {
+        nonce,
         onShellReady() {
           const body = new PassThrough();
 

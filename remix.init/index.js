@@ -88,20 +88,8 @@ const main = async ({ packageManager, rootDirectory }) => {
     `SESSION_SECRET="${getRandomString(16)}"`,
   );
 
-  const initInstructions = `
-- First run this stack's \`remix.init\` script and commit the changes it makes to your project.
-
-  \`\`\`sh
-  npx remix init
-  git init # if you haven't already
-  git add .
-  git commit -m "Initialize project"
-  \`\`\`
-`;
-
   const newReadme = readme
-    .replace(new RegExp("RemixGrungeStack", "g"), toLogicalID(APP_NAME))
-    .replace(initInstructions, "");
+    .replace(new RegExp("ReactRouterGrungeStack", "g"), toLogicalID(APP_NAME));
 
   updatePackageJson({ APP_NAME, packageJson });
 
@@ -157,7 +145,7 @@ async function askSetupQuestions({ packageManager, rootDirectory }) {
   }
 
   console.log(
-    `✅  Project is ready! Start development with "${pm.run("dev")}"`,
+    `  Project is ready! Start development with "${pm.run("dev")}"`,
   );
 }
 
