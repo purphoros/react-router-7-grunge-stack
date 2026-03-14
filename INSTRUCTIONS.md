@@ -58,3 +58,9 @@ npx arc env --add --env production SESSION_SECRET $(openssl rand -hex 32)
 ```
 
 These will be applied to the staging and production Lambda functions respectively.
+
+## Deployment
+
+Committing code changes should activate GitHub Actions to deploy to AWS.
+
+You may need to activate them for your repository.
